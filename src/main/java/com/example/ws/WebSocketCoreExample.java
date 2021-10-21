@@ -116,6 +116,11 @@ public class WebSocketCoreExample
     // -----------------------------------------------------------------------------------------
     public static void main(String[] args) throws Exception {
 
+        for(String argItem : args)
+        {
+            System.out.println(argItem);
+        }
+
         ActorSystem system = ActorSystem.create();
 
         try
