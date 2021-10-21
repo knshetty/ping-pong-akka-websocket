@@ -94,7 +94,6 @@ public class WebSocketCoreExample
 
         if (request.getUri().path().equals("/greeter"))
         {
-
             return request.getAttribute(AttributeKeys.webSocketUpgrade())
                     .map(upgrade -> {
                         Flow<Message, Message, NotUsed> greeterFlow = greeter();
@@ -116,28 +115,15 @@ public class WebSocketCoreExample
     // -----------------------------------------------------------------------------------------
     public static void main(String[] args) throws Exception {
 
-        // --- Auto config ip port ---
-        for(String argItem : args)
-        {
-            System.out.println("Argument passssssssssssssssssssed: " + argItem);
-        }
-        int port = 3000;
-        /*if(args.length != 0)
-        {
-            port = Integer.parseInt(args[0]);
-        }*/
-
         ActorSystem system = ActorSystem.create();
 
         try
         {
             final Function<HttpRequest, HttpResponse> handler = request -> handleRequest(request);
 
-
-
             CompletionStage<ServerBinding> serverBindingFuture =
                     Http.get(system)
-                            .newServerAt("0.0.0.0", port)
+                            .newServerAt("localhost", 8080)
                             .bindSync(handler);
 
             // will throw if binding fails
