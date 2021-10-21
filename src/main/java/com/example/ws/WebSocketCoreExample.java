@@ -124,7 +124,7 @@ public class WebSocketCoreExample
 
             CompletionStage<ServerBinding> serverBindingFuture =
                     Http.get(system)
-                            .newServerAt("0.0.0.0", 8080)
+                            .newServerAt("0.0.0.0", 3000)
                             .bindSync(handler);
 
             // will throw if binding fails
