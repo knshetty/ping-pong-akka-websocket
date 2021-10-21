@@ -119,6 +119,7 @@ project/plugins/project/
 project/
 sbt-dist/
 build.sbt
+pom.xml
 sbt
 sbt.bat
 # --------------------------------------------------------------------------------------------------
