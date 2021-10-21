@@ -116,9 +116,15 @@ public class WebSocketCoreExample
     // -----------------------------------------------------------------------------------------
     public static void main(String[] args) throws Exception {
 
+        // --- Auto config ip port ---
         for(String argItem : args)
         {
-            System.out.println(argItem);
+            System.out.println("Argument passssssssssssssssssssed: " + argItem);
+        }
+        int port = 3000;
+        if(args.length != 0)
+        {
+            port = Integer.parseInt(args[0]);
         }
 
         ActorSystem system = ActorSystem.create();
@@ -127,9 +133,11 @@ public class WebSocketCoreExample
         {
             final Function<HttpRequest, HttpResponse> handler = request -> handleRequest(request);
 
+
+
             CompletionStage<ServerBinding> serverBindingFuture =
                     Http.get(system)
-                            .newServerAt("0.0.0.0", 3000)
+                            .newServerAt("0.0.0.0", port)
                             .bindSync(handler);
 
             // will throw if binding fails
