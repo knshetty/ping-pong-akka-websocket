@@ -122,10 +122,10 @@ public class WebSocketCoreExample
             System.out.println("Argument passssssssssssssssssssed: " + argItem);
         }
         int port = 3000;
-        if(args.length != 0)
+        /*if(args.length != 0)
         {
             port = Integer.parseInt(args[0]);
-        }
+        }*/
 
         ActorSystem system = ActorSystem.create();
 
