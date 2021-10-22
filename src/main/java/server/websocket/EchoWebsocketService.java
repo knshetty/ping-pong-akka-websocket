@@ -1,28 +1,16 @@
-package com.example.ws;
+package server.websocket;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import akka.NotUsed;
-import akka.http.impl.util.JavaMapping;
-import akka.http.javadsl.ConnectHttp;
-import akka.http.javadsl.ConnectionContext;
 import akka.http.javadsl.model.StatusCodes;
-import akka.http.javadsl.model.ws.WebSocketRequest;
-import akka.http.javadsl.settings.ClientConnectionSettings;
-import akka.http.javadsl.settings.ServerSettings;
-import akka.http.javadsl.settings.WebSocketSettings;
 import akka.http.scaladsl.model.AttributeKeys;
 import akka.japi.JavaPartialFunction;
 import akka.japi.function.Function;
 
-import akka.stream.ActorMaterializer;
-import akka.stream.Materializer;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Source;
 
@@ -33,20 +21,18 @@ import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.model.ws.Message;
 import akka.http.javadsl.model.ws.TextMessage;
-import akka.http.javadsl.model.ws.WebSocket;
-import akka.util.ByteString;
 
 @SuppressWarnings({"Convert2MethodRef", "ConstantConditions"})
-public class WebSocketCoreExample
+public class EchoWebsocketService
 {
     // -----------------------------------------------------------------------------------------
     // Websocket Handlers
     // -----------------------------------------------------------------------------------------
     /**
-     * A handler that treats incoming messages as a name,
-     * and responds with a greeting to that name
+     * A handler that treats incoming messages and responds with an echo for all message.
+     * However, if the incoming message is "ping" then the response will be "pong".
      */
-    public static Flow<Message, Message, NotUsed> greeter() {
+    public static Flow<Message, Message, NotUsed> echoStreamer() {
         return
                 Flow.<Message>create()
                         .collect(new JavaPartialFunction<Message, Message>() {
@@ -69,17 +55,17 @@ public class WebSocketCoreExample
         {
             String incomingMsg = msg.getStrictText();
 
+            // On incoming msg is "ping" then respond "pong"
             if(incomingMsg.equals("ping"))
             {
                 return TextMessage.create("pong");
             }
             else
             {
-                //return TextMessage.create("Server echo: " + incomingMsg);
                 return TextMessage.create(incomingMsg);
             }
         }
-        else // ... this would suffice to handle all text messages in a streaming fashion
+        else // default to handle all text messages in a streaming fashion
         {
             return TextMessage.create(Source.single("Server echo[Streaming]: ").concat(msg.getStreamedText()));
         }
@@ -92,16 +78,18 @@ public class WebSocketCoreExample
 
         System.out.println("Handling request to " + request.getUri());
 
-        if (request.getUri().path().equals("/greeter"))
+        if (request.getUri().path().equals("/echo"))
         {
             return request.getAttribute(AttributeKeys.webSocketUpgrade())
                     .map(upgrade -> {
-                        Flow<Message, Message, NotUsed> greeterFlow = greeter();
-                        HttpResponse response = upgrade.handleMessagesWith(greeterFlow);
+                        Flow<Message, Message, NotUsed> echoFlow = echoStreamer();
+                        HttpResponse response = upgrade.handleMessagesWith(echoFlow);
                         return response;
                     })
                     .orElse(
-                            HttpResponse.create().withStatus(StatusCodes.BAD_REQUEST).withEntity("Expected WebSocket request")
+                            HttpResponse.create()
+                                    .withStatus(StatusCodes.BAD_REQUEST)
+                                    .withEntity("Expected WebSocket request")
                     );
         }
         else
@@ -111,7 +99,7 @@ public class WebSocketCoreExample
     }
 
     // -----------------------------------------------------------------------------------------
-    // Websocket Server Main Loop
+    // Websocket Service - Main Loop
     // -----------------------------------------------------------------------------------------
     public static void main(String[] args) throws Exception {
 
@@ -123,11 +111,13 @@ public class WebSocketCoreExample
 
             CompletionStage<ServerBinding> serverBindingFuture =
                     Http.get(system)
-                            .newServerAt("localhost", 8080)
+                            .newServerAt("0.0.0.0", 8080)
                             .bindSync(handler);
 
             // will throw if binding fails
             serverBindingFuture.toCompletableFuture().get(1, TimeUnit.SECONDS);
+
+            System.out.println("Websocket service uri ready >> ws://localhost:8080/echo");
             System.out.println("Press ENTER to stop.");
             new BufferedReader(new InputStreamReader(System.in)).readLine();
         }

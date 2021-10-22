@@ -25,7 +25,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
-mainClassName = "com.example.ws.WebSocketCoreExample"
+mainClassName = "server.websocket.EchoWebsocketService"
 
 run {
     standardInput = System.in
